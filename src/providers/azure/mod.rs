@@ -201,7 +201,12 @@ impl Azure {
 
     fn get_certs_endpoint(&self) -> Result<String> {
         // grab the certificates endpoint from the xml and return it
-        let cert_endpoint: &str = &self.goal_state.container.role_instance_list.role_instances[0].configuration.certificates;
+        let role_instance = Some(&self.goal_state.container.role_instance_list.role_instances.get(0));
+        if role_instance == None {
+            Err(format!("no role instance found for entry {}", 0));
+        }
+
+        let cert_endpoint: &str = role_instance.configuration.certificates;
         Ok(String::from(cert_endpoint))
     }
 
@@ -254,7 +259,12 @@ impl Azure {
     }
 
     fn get_attributes(&self) -> Result<Attributes> {
-        let endpoint = &self.goal_state.container.role_instance_list.role_instances[0].configuration.shared_config;
+        let role_instance = Some(&self.goal_state.container.role_instance_list.role_instances.get(0));
+        if (role_instance == None) {
+            Err(format!("no role instance found for entry {}", 0));
+        }
+
+        let endpoint = role_instance.configuration.shared_config;
 
         let shared_config: SharedConfig = self.client.get(retry::Xml, endpoint.to_string()).send()
             .chain_err(|| "failed to get shared configuration")?
